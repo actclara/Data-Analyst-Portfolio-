@@ -1,4 +1,4 @@
-# Data-Analyst-Portfolio
+# Alicia Clara Trevina's Data Analyst Portfolio 
 
 ### Respiratory Diseases Analysis on Infants using R 
 • Investigated factors associated with the risk of respiratory disease in 18000+ infants data and conducted ad-hoc analysis.
