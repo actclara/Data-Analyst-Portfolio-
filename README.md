@@ -11,6 +11,10 @@ Maven Grocery Chain Data Visualization
 • Implemented Power BI to clean, analyse, and visualise 2 years of Maven Grocery Chain’s data.
 • Developed insights on customer, financial and sales aspects of the company by designing a Power BI Dashboard.
 
-### Customer Analytics on a Chicago-Based Bike-Sharing Company using Python 
+### Customer Analytics on a Chicago-Based Bike-Sharing Company using Python  
 • Assessed 12-month customer bike sharing data to convert non-membership holders into annual members using Pandas.
 • Summarised key insights on Power BI dashboard.
+
+### Maven Grocery Chain Data Visualization using Power BI 
+• Implemented Power BI to clean, analyse, and visualise 2 years of Maven Grocery Chain’s data.
+• Developed insights on customer, financial and sales aspects of the company by designing a Power BI Dashboard.
