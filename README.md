@@ -3,6 +3,10 @@
 Below are some of the projects that I've built over the past few years to further my experience in data analytics, understand the complex challenges of how to relay important
 information and insights based on the intended audience. Few tools I have used includes: Python, R, and Power BI. 
 
+### Data Cleaning and Data Management on Amazon Sales in India using PostgreSQL 🛍️
+• Conducted data walkthrough, data cleaning of the Amazon Sales Dataset based in Kaggle. 
+• Investigated the main categories sold in Amazon and built a summary result of the main category list. 
+
 ### Respiratory Diseases Analysis on Infants using R 🫁
 • Investigated factors associated with the risk of respiratory disease in 18000+ infants data and conducted ad-hoc analysis.
 
