@@ -5,7 +5,8 @@ information and insights based on the intended audience. Few tools I have used i
 
 ### Data Cleaning and Data Management on Amazon Sales in India using PostgreSQL 🛍️
 • Conducted data walkthrough, data cleaning of the Amazon Sales Dataset based in Kaggle. 
-• Investigated the main categories sold in Amazon and built a summary result of the main category list. 
+
+• Investigated the main categories sold in Amazon and built a summary financial result of the main category list. 
 
 ### Respiratory Diseases Analysis on Infants using R 🫁
 • Investigated factors associated with the risk of respiratory disease in 18000+ infants data and conducted ad-hoc analysis.
