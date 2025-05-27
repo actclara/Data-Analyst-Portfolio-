@@ -595,3 +595,246 @@ inner join
   pizza_runner.pizza_toppings as pt 
 on pt.topping_id = et.excluded 
 ;
+
+WITH cte_cleaned_customer_orders AS (
+  SELECT
+    order_id,
+    customer_id,
+    pizza_id,
+    CASE
+      WHEN exclusions IN ('', 'null') THEN NULL
+      ELSE exclusions
+    END AS exclusions,
+    CASE
+      WHEN extras IN ('', 'null') THEN NULL
+      ELSE extras
+    END AS extras,
+    order_time,
+    ROW_NUMBER() OVER () AS original_row_number
+  FROM pizza_runner.customer_orders
+),
+-- split the toppings using our previous solution
+cte_regular_toppings AS (
+SELECT
+  pizza_id,
+  REGEXP_SPLIT_TO_TABLE(toppings, '[,\s]+')::INTEGER AS topping_id
+FROM pizza_runner.pizza_recipes
+),
+-- now we can should left join our regular toppings with all pizzas orders
+cte_base_toppings AS (
+  SELECT
+    cte_cleaned_customer_orders.order_id,
+    cte_cleaned_customer_orders.customer_id,
+    cte_cleaned_customer_orders.pizza_id,
+    cte_cleaned_customer_orders.order_time,
+    cte_cleaned_customer_orders.original_row_number,
+    cte_regular_toppings.topping_id
+  FROM cte_cleaned_customer_orders
+  LEFT JOIN cte_regular_toppings
+    ON cte_cleaned_customer_orders.pizza_id = cte_regular_toppings.pizza_id
+),
+-- now we can generate CTEs for exclusions and extras by the original row number
+cte_exclusions AS (
+  SELECT
+    order_id,
+    customer_id,
+    pizza_id,
+    order_time,
+    original_row_number,
+    REGEXP_SPLIT_TO_TABLE(exclusions, '[,\s]+')::INTEGER AS topping_id
+  FROM cte_cleaned_customer_orders
+  WHERE exclusions IS NOT NULL
+),
+cte_extras AS (
+  SELECT
+    order_id,
+    customer_id,
+    pizza_id,
+    order_time,
+    original_row_number,
+    REGEXP_SPLIT_TO_TABLE(extras, '[,\s]+')::INTEGER AS topping_id
+  FROM cte_cleaned_customer_orders
+  WHERE extras IS NOT NULL
+),
+-- now we can perform an except and a union all on the respective CTEs
+cte_combined_orders AS (
+  SELECT * FROM cte_base_toppings
+  EXCEPT
+  SELECT * FROM cte_exclusions
+  UNION ALL
+  SELECT * FROM cte_extras
+),
+-- aggregate the count of topping ID and join onto pizza toppings
+cte_joined_toppings AS (
+  SELECT
+    t1.order_id,
+    t1.customer_id,
+    t1.pizza_id,
+    t1.order_time,
+    t1.original_row_number,
+    t1.topping_id,
+    t2.pizza_name,
+    t3.topping_name,
+    COUNT(t1.*) AS topping_count
+  FROM cte_combined_orders AS t1
+  INNER JOIN pizza_runner.pizza_names AS t2
+    ON t1.pizza_id = t2.pizza_id
+  INNER JOIN pizza_runner.pizza_toppings AS t3
+    ON t1.topping_id = t3.topping_id
+  GROUP BY
+    t1.order_id,
+    t1.customer_id,
+    t1.pizza_id,
+    t1.order_time,
+    t1.original_row_number,
+    t1.topping_id,
+    t2.pizza_name,
+    t3.topping_name
+)
+
+SELECT * FROM CTE_JOINED_TOPPINGS 
+
+
+-- If a Meat Lovers pizza costs $12 and Vegetarian costs $10 and there were no charges for changes 
+-- how much money has Pizza Runner made so far if there are no delivery fees?
+
+with pizza_count as (select 
+  pn.pizza_name 
+  ,case when lower(pn.pizza_name) = 'meatlovers' then 12 
+  when lower(pn.pizza_name) = 'vegetarian' then 10 
+  else 0 end as pizza_cost 
+  ,count(ro.pizza_id) as pizza_count
+from pizza_runner.customer_orders as ro 
+inner join pizza_runner.pizza_names as pn 
+  on ro.pizza_id = pn.pizza_id
+group by 1,2 ) 
+
+select 
+  sum(pizza_cost*pizza_count) as pizza_total
+from pizza_count 
+
+--What if there was an additional $1 charge for any pizza extras? + Add cheese is $1 extra
+
+select 
+  pizza_id 
+  ,case when extras in ('','null') then null 
+  else extras end as extras
+  ,row_number() over() as original_row_number
+from pizza_runner.customer_orders
+
+
+-- clean customer_orders table 
+with clean_cte as (select 
+  co.order_id
+  ,co.customer_id
+  ,co.pizza_id
+  ,co.order_time
+  ,ro.pickup_time
+  ,case when co.exclusions in ('','null') then null 
+  else exclusions end as exclusions 
+  ,case when co.extras in ('','null') then null 
+  else extras end as extras 
+  ,row_number() over() as original_row_number 
+from 
+  pizza_runner.customer_orders as co 
+-- anti-join
+left join 
+  pizza_runner.runner_orders as ro 
+on co.order_id = ro.order_id
+where ro.pickup_time is not null )
+
+select 
+  sum(case when pizza_id = 1 then 12 
+  when pizza_id = 2 then 10 
+  end) + 
+  coalesce(cardinality(regexp_split_to_array('extras','[,\s]+')),0) as cost
+from clean_cte
+
+-- find out the difference between query A and query B 
+
+WITH cte_cleaned_customer_orders AS (
+  SELECT
+    order_id,
+    customer_id,
+    pizza_id,
+    CASE
+      WHEN exclusions IN ('', 'null') THEN NULL
+      ELSE exclusions
+    END AS exclusions,
+    CASE
+      WHEN extras IN ('', 'null') THEN NULL
+      ELSE extras
+    END AS extras,
+    order_time,
+    ROW_NUMBER() OVER () AS original_row_number
+  FROM pizza_runner.customer_orders
+  WHERE EXISTS (
+    SELECT 1 FROM pizza_runner.runner_orders
+    WHERE customer_orders.order_id = runner_orders.order_id
+      AND runner_orders.pickup_time is not 'null'
+  )
+)
+SELECT
+  SUM(
+    CASE
+      WHEN pizza_id = 1 THEN 12
+      WHEN pizza_id = 2 THEN 10
+      END +
+    -- we can use CARDINALITY to find the length of array of extras
+    COALESCE(
+      CARDINALITY(REGEXP_SPLIT_TO_ARRAY(extras, '[,\s]+')),
+      0
+    )
+  ) AS cost
+FROM cte_cleaned_customer_orders;
+
+-- create rating_table
+
+select setseed(1); 
+
+drop table if exists pizza_runner.rating; 
+create table pizza_runner.rating 
+  ("order_id" integer
+  ,"rating" integer);
+  
+insert into pizza_runner.rating 
+
+select 
+  order_id
+  ,floor(1+5*random()) as rating 
+from pizza_runner.runner_orders
+where pickup_time is not null 
+
+select * from pizza_runner.rating;
+
+
+
+--- Q4 
+with cte_one as (select 
+ co.order_time
+ ,co.pizza_id
+ ,ro.pickup_time
+ ,date_part('minute',age(ro.pickup_time::timestamp,co.order_time))::numeric as pickup_minutes 
+ ,unnest(regexp_match(ro.distance,'(^[0-9,.]+)'))::numeric as distance 
+ ,unnest(regexp_match(ro.duration,'(^[0-9,.]+)'))::numeric as time 
+  ,ro.order_id
+
+from pizza_runner.rating as r 
+inner join 
+pizza_runner.customer_orders as co
+on r.order_id = co.order_id
+inner join 
+pizza_runner.runner_orders as ro 
+on r.order_id = ro.order_id 
+where ro.pickup_time is not null and ro.pickup_time not in ('null','')) 
+
+select 
+  order_time
+  ,pickup_time
+  ,pickup_minutes 
+  ,round(avg(distance/(time/60)),1) as avg_speed 
+  ,count(pizza_id) as pizza_count
+from cte_one 
+group by 1,2,3
+order by order_time
+;
