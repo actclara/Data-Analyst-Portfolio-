@@ -3,6 +3,12 @@
 Below are some of the projects that I've built over the past few years to further my experience in data analytics, understand the complex challenges of how to relay important
 information and insights based on the intended audience. Few tools I have used includes: Python, R, and Power BI. 
 
+### Multiclassification Prediction Model e-Commerce Platform (Random Forest, XGBoost, SVM) 
+• applied CRISP-DM methodology to identify important features that predict customer satisfaction 
+
+• compared ML models: RF, GBDT, and SVM and applied hyperparameter tuning e.g. SMOTE to improve evaluation results 
+
+
 ### Data Cleaning and Data Management on Amazon Sales in India using PostgreSQL 🛍️
 • Conducted data walkthrough, data cleaning of the Amazon Sales Dataset based in Kaggle. 
 
