@@ -3,6 +3,12 @@
 Below are some of the projects that I've built over the past few years to further my experience in data analytics, understand the complex challenges of how to relay important
 information and insights based on the intended audience. Few tools I have used includes: Python, R, and Power BI. 
 
+### Topic Modelling Project: Churn Rate Prediction for Fashion Subscription Services (Rent the Runway) 
+Warwick Business School - Internal Dissertation 
+
+Developed two multimodal churn prediction models which utilises Latent Dirichlet Allocation and BERTopic to extract latent topics from review texts and use Logistic Regression to finally classify the customers as churned or not. Additionally, a singlemodal model of Logistic Regression is used as a benchmark model. 
+
+
 ### Machine Learning Project – Review Prediction for E-commerce Platform (Nile)
 Warwick Business School – Analytics in Practice, Group Project
 
